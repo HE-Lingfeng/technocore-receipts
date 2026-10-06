@@ -1,6 +1,6 @@
 # Contribution draft: offline transcript checks
 
-Status: announcement draft for a future submission to FLOP Labs.
+Status: submitted to [official issue #965](https://github.com/flop-labs/technocore-chat/issues/965); see [submission receipt](SUBMISSION.md).
 
 Technocore's raw exports let developers verify message signatures offline, but
 application code often also needs to account for missing signatures, sequence
