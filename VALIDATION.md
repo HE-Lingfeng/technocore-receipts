@@ -1,8 +1,10 @@
 # Validation, 2026-10-06
 
 The standalone tool was checked locally before publication.
+The original release checks are recorded below; the 2026-10-09 follow-up adds
+coverage metadata and a signature-corruption regression test.
 
-## Automated checks
+## Automated checks, v0.1.0 on 2026-10-06
 
 `python3 -m unittest discover -s tests -v`: **40 tests passed**.
 
@@ -20,6 +22,17 @@ python3 -m pip wheel --no-deps --no-build-isolation --no-index --wheel-dir /tmp/
 Wheel contents include only the production package and package metadata.
 The package's production code imports no network client or private-key loader.
 
+### Signature decoding and nonce precision
+
+An Ed25519 `did:key` decodes to `0xed 0x01` followed by the 32-byte public key.
+The verifier checks and strips the two-byte multicodec prefix before loading
+the key. It verifies the exact UTF-8 payload `room|nonce|text`.
+
+String nonces retain their digits, including leading zeros. JSON integer
+nonces use Python's exact integer parsing and decimal conversion; floats are
+rejected. No double-precision conversion occurs. A JavaScript implementation
+must preserve raw nonce digits before parsing can round a 19-digit integer.
+
 ## Actual public export
 
 Checked at approximately **2026-10-06 17:12 Asia/Shanghai**. The input was
@@ -36,6 +49,8 @@ The auditor was run with a signer pin for the known public referee DID.
 | Valid signatures | `2,558` |
 | Invalid / missing / uncheckable signatures | `0 / 0 / 0` |
 | Observed sequence range | `1–2558`, contiguous in the file |
+| First record's stored `ts` (UTC) | `2026-09-25T12:05:22.575364Z` |
+| Last record's stored `ts` (UTC) | `2026-10-04T10:00:15.644705Z` |
 | Per-record issues | None |
 | CLI status / exit | `passed / 0` |
 
@@ -47,6 +62,33 @@ account or a prize. The report keeps those scope flags false.
 
 The real export and generated report stay outside the repository. They are
 not fixtures or release contents.
+
+## Follow-up checks, 2026-10-09
+
+A certificate-verified, read-only download from the same public export URL
+had the exact SHA-256, byte count, record count, sequence range and generation
+listed above. That byte match allowed the first and last stored timestamps to
+be added to the original observation. These timestamps describe the input's
+boundary records; they are server metadata, not a signed time-range guarantee.
+
+`python3 -m unittest discover -s tests -v`: **41 tests passed** on the updated
+working tree. The added test first accepts a valid record, flips one bit of
+the signature, re-encodes it canonically, and requires `signature_mismatch`
+and a failed report. This checks cryptographic rejection separately from
+encoding rejection. Existing negative tests cover changed text, room, nonce
+and public key, malformed DID, and noncanonical signature encoding.
+
+In [issue #965](https://github.com/flop-labs/technocore-chat/issues/965#issuecomment-6078050577),
+pepedesigner reports independently reproducing the 2,558 valid signatures,
+single referee signer and zero observed sequence or nonce-order issues with a
+Node/WebCrypto implementation. The comment supplies matching observations;
+it does not supply an independently checked file hash.
+
+The collection guidance in both READMEs now explains `since` as a newest-window
+filter, checking the first returned sequence against the previous cursor,
+retained-ring backfill limits, and recording the input's coverage window.
+These additions clarify file-level validation; the production verifier and
+report schema are unchanged.
 
 ## Original contest package
 

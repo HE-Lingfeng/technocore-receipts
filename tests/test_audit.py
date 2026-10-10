@@ -61,6 +61,18 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(report["status"], "failed")
         self.assertIn("signature_mismatch", report["records"][0]["issues"])
 
+    def test_corrupted_signature_bytes_are_rejected(self):
+        record = self.record()
+        self.assertEqual(self.audit([record])["status"], "passed")
+        signature = bytearray(base64.urlsafe_b64decode(record["sig"] + "=="))
+        signature[0] ^= 1
+        record["sig"] = base64.urlsafe_b64encode(signature).decode().rstrip("=")
+        report = self.audit([record])
+        self.assertEqual(report["status"], "failed")
+        self.assertEqual(report["summary"]["signatures"]["invalid"], 1)
+        self.assertIn("signature_mismatch", report["records"][0]["issues"])
+        self.assertNotIn("invalid_signature_encoding", report["records"][0]["issues"])
+
     def test_wrong_room_is_rejected(self):
         report = audit_stream(io.BytesIO(self.encode([self.record()])), room="other-room")
         self.assertEqual(report["summary"]["signatures"]["invalid"], 1)
