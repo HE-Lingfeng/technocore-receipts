@@ -2,7 +2,8 @@
 
 The standalone tool was checked locally before publication.
 The original release checks are recorded below; the 2026-10-09 follow-up adds
-coverage metadata and a signature-corruption regression test.
+coverage metadata and a signature-corruption regression test. A subsequent
+reviewer follow-up supplies an independent input hash.
 
 ## Automated checks, v0.1.0 on 2026-10-06
 
@@ -81,14 +82,30 @@ and public key, malformed DID, and noncanonical signature encoding.
 In [issue #965](https://github.com/flop-labs/technocore-chat/issues/965#issuecomment-6078050577),
 pepedesigner reports independently reproducing the 2,558 valid signatures,
 single referee signer and zero observed sequence or nonce-order issues with a
-Node/WebCrypto implementation. The comment supplies matching observations;
-it does not supply an independently checked file hash.
+Node/WebCrypto implementation. That initial comment supplies matching
+observations; the later input-hash comparison is recorded below.
 
 The collection guidance in both READMEs now explains `since` as a newest-window
 filter, checking the first returned sequence against the previous cursor,
 retained-ring backfill limits, and recording the input's coverage window.
 These additions clarify file-level validation; the production verifier and
 report schema are unchanged.
+
+## Independent input-hash comparison, 2026-10-10
+
+In a [follow-up comment](https://github.com/flop-labs/technocore-chat/issues/965#issuecomment-6095987755)
+posted on **2026-10-10 17:10:13 Asia/Shanghai**, pepedesigner reports independently
+computing the SHA-256 of the publicly served `d-close1-price` export:
+
+```text
+510cc78a844b1d0dd6a34f97ea9cb649e2d8f9f5f1b4ec510760cc11a36cb4e8
+```
+
+Compared on 2026-10-11, this value exactly matches the original input hash above.
+The reported **1,392,087 bytes**, **2,558 records**, contiguous sequence range
+**1–2558**, and first and last stored timestamps also match the original
+observation. This records independent, reviewer-published corroboration of
+matching export bytes alongside the signature and coverage observations.
 
 ## Original contest package
 
