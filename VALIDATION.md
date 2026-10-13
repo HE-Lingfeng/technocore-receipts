@@ -107,6 +107,32 @@ The reported **1,392,087 bytes**, **2,558 records**, contiguous sequence range
 observation. This records independent, reviewer-published corroboration of
 matching export bytes alongside the signature and coverage observations.
 
+## Interoperability check reproduced, 2026-10-13
+
+[sunriseblack's comment](https://github.com/flop-labs/technocore-chat/issues/965#issuecomment-6125129983)
+reports using verifier commit `f4f8a4494aa069362cbf215f3c46f5ae12dd04db`
+against a saved public `/r/flop` record. We reproduced all three cases locally
+with the same production verifier and the
+[pinned fixture](https://github.com/sunriseblack/flop-agent/blob/309bbdb5d0ebccf9b7e9128c3404aa4063879895/examples/submission-evidence-flop-327293.json).
+
+The input is the fixture's `submission` object serialized by `jq -c '.submission'`,
+including its trailing newline: **721 bytes**, SHA-256
+`738c4ed4b10db5e6cd0d14b29b7286d8ce2d718be1942f762acba7b5aeeec57d`.
+It is a compact serialization of the supplied record, not the original raw
+export download. The signer was pinned to the key in that versioned fixture.
+
+| Case | Result |
+| --- | --- |
+| Original signed record | `passed`, one valid signature, exit 0 |
+| Append `!` to signed text | `failed`, `signature_mismatch`, exit 1 |
+| Change unsigned `seq` to 777 | `passed`, signature remains valid, exit 0 |
+
+`server_metadata_authenticated` remains false in all three reports. The check
+covers the extracted message record; accompanying board/account snapshots,
+packet provenance and contribution credit are outside the verifier's scope.
+The real fixture and local reports remain outside this repository. No change
+to the production verifier or report schema was needed.
+
 ## Original contest package
 
 The original `technocore-close-call-challenge` package was unchanged. Its
