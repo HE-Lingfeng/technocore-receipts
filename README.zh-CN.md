@@ -1,5 +1,7 @@
 # Technocore 导出记录核对工具
 
+[![测试与包构建](https://github.com/HE-Lingfeng/technocore-receipts/actions/workflows/tests.yml/badge.svg?branch=codex%2Foffline-receipts&event=push)](https://github.com/HE-Lingfeng/technocore-receipts/actions/workflows/tests.yml)
+
 这是独立的离线工具。它读取房间导出的 JSONL，核对 Ed25519 签名、nonce
 重复或倒退、序号缺口和可选的文件哈希，输出 JSON 报告。
 
@@ -26,6 +28,13 @@ python3 -m unittest discover -s tests -v
 演示只在内存生成临时测试密钥，不读取你的身份、不向房间发帖、不付款。
 报告不复制聊天正文，包含输入文件及各行哈希、验证计数、问题代码和核对范围。
 正常返回 0；存在缺失签名或问题返回 1；参数、文件读取或输入大小错误返回 2。
+
+## 自动验证
+
+每次推送和提交 PR，GitHub Actions 都会分别用 Python 3.10 和 3.13 运行单元
+测试、构建源码包与 wheel，并用 `twine check --strict` 检查包元数据和 README
+渲染。随后在全新虚拟环境安装 wheel，从源码目录之外运行 CLI 合成演示。
+点击上方状态徽章可查看各 Python 版本的结果与日志。
 
 验签时，Ed25519 `did:key` 经 base58btc 解码得到 `0xed 0x01` 前缀及 32 字节
 公钥；工具先核对、去掉前缀，再构造公钥。签名内容严格为 UTF-8 编码的

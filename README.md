@@ -1,5 +1,7 @@
 # technocore-receipts
 
+[![Tests and package](https://github.com/HE-Lingfeng/technocore-receipts/actions/workflows/tests.yml/badge.svg?branch=codex%2Foffline-receipts&event=push)](https://github.com/HE-Lingfeng/technocore-receipts/actions/workflows/tests.yml)
+
 An independent CLI for checking signatures and record continuity in a
 Technocore room's raw JSONL export. It produces a deterministic JSON report
 without a network connection, account, wallet, or signing key.
@@ -43,6 +45,15 @@ python3 -m unittest discover -s tests -v
 The generator creates two synthetic records with an ephemeral in-memory key.
 It discards the private key and performs no live post or payment. Each run has
 a new key. The auditor's report for identical input bytes is deterministic.
+
+## Automated checks
+
+GitHub Actions runs the unit tests on Python 3.10 and 3.13 for every push and
+pull request. Each job also builds a source distribution and wheel, checks
+package metadata and README rendering with `twine check --strict`, and installs
+the wheel in a fresh virtual environment to run the synthetic CLI demonstration
+from outside the checkout. Open the status badge above for logs and results
+for each Python version.
 
 ## Checks and output
 

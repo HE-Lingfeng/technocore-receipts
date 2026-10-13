@@ -1,0 +1,64 @@
+name: Tests and package
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.13"]
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test and build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install . build twine
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Build source distribution and wheel
+        run: python -m build
+
+      - name: Check package metadata and README rendering
+        run: python -m twine check --strict dist/*
+
+      - name: Install wheel and check CLI outside the checkout
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/receipts-wheel"
+          "$RUNNER_TEMP/receipts-wheel/bin/python" -m pip install dist/*.whl
+          "$RUNNER_TEMP/receipts-wheel/bin/python" -m pip check
+          python examples/make_demo.py > "$RUNNER_TEMP/receipts-demo.jsonl"
+          cd "$RUNNER_TEMP"
+          receipts-wheel/bin/technocore-receipts --version
+          receipts-wheel/bin/technocore-receipts receipts-demo.jsonl --room demo-room > receipts-report.json
+          receipts-wheel/bin/python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path("receipts-report.json").read_text())
+          assert report["status"] == "passed", report["status"]
+          assert report["summary"]["signatures"]["valid"] == 2
+          print("Installed wheel CLI: two synthetic signatures verified")
+          PY
